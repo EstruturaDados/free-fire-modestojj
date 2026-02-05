@@ -7,6 +7,7 @@
 typedef struct  {
 char nome[30];
 char tipo[20];
+int quantidade;
 }item;
 
 typedef struct {
@@ -17,16 +18,19 @@ typedef struct {
 
 void iniciarMochila(mochila *itemMochila);
 
-void adicionarItem(mochila *itemMochila, const char* nome, const char* tipo);
+void adicionarItem(mochila *itemMochila, const char* nome, const char* tipo, int qnt);
 
 void removerItem(mochila *itemMochila, const char* nome, const char* tipo);
 
 void listarItens(const mochila *itemMochila);
 
 void statusMochila(const mochila *itemMochila);
-//--------------------main-----------------------------------
+
+void buscarItemNome(const mochila *itemMochila);
+
 void menuItem(mochila *itemMochila);
 
+//--------------------main-----------------------------------
 int main() {
     mochila itemMochila;
     iniciarMochila(&itemMochila);
@@ -61,7 +65,7 @@ void iniciarMochila(mochila *itemMochila) {
     itemMochila->quantidade = 0;
 }
 
-void adicionarItem(mochila *itemMochila, const char* nome, const char* tipo){
+void adicionarItem(mochila *itemMochila, const char* nome, const char* tipo, int qnt){
     if (itemMochila->quantidade >= MAX_ITENS) {
         printf("A mochila esta cheia! Nao e possivel adicionar mais itens.\n");
         return;
@@ -69,9 +73,10 @@ void adicionarItem(mochila *itemMochila, const char* nome, const char* tipo){
 
     strcpy(itemMochila->itens[itemMochila->quantidade].nome, nome);
     strcpy(itemMochila->itens[itemMochila->quantidade].tipo, tipo);
+    itemMochila->itens[itemMochila->quantidade].quantidade = qnt;
     //apos a copia itemMochila->quantidade é incremento pois agora temos mais um item na lista 
     itemMochila->quantidade++;
-    printf("Item \"%s\" inserido com sucesso.\n", nome);
+    printf("Item \"%s\" (%d unidades) inserido com sucesso.\n", nome, qnt);
 
     statusMochila(itemMochila);
 }
@@ -102,6 +107,7 @@ void removerItem(mochila *itemMochila, const char* nome, const char* tipo) {
         for (i = pos; i < itemMochila->quantidade -1; i++) {
             strcpy(itemMochila->itens[i].nome, itemMochila->itens[i + 1].nome);
             strcpy(itemMochila->itens[i].tipo, itemMochila->itens[i + 1].tipo);
+            itemMochila->itens[i].quantidade = itemMochila->itens[i + 1].quantidade;
         }
 
          //atualizacao do contador finalmente quantidade e decrementado para refletir que a lista tem um item a menos 
@@ -119,14 +125,41 @@ void listarItens(const mochila *itemMochila) {
     }
 
     printf("====Itens na Mochila====\n");
-    printf("------------------------------\n");
-    printf("Nome\t\t\tTipo\n");
-    printf("------------------------------\n");
+    printf("--------------------------------------------\n");
+    printf("Nome|\t\t|Tipo\t\t|Quantidade\n");
+    printf("--------------------------------------------\n");
     for (int i = 0; i < itemMochila->quantidade; i ++) {
-        printf("%-10s\t\t%-10s\n",
+        printf("%-10s\t%-10s\t%d\n",
        itemMochila->itens[i].nome,
-       itemMochila->itens[i].tipo);
+       itemMochila->itens[i].tipo,
+       itemMochila->itens[i].quantidade);
 
+    }
+}
+
+void buscarItemNome(const mochila *itemMochila) {
+    char nomeBuscar[30];
+    printf("Digite o nome do item a buscar: ");
+    scanf(" %29[^\n]", nomeBuscar);
+    int encontrado = 0;
+
+    // Busca Sequencial: percorre item por item até encontrar
+    for (int i = 0; i < itemMochila->quantidade; i++) {
+        // Compara o nome do item atual com o nome procurado
+        if (strcmp(itemMochila->itens[i].nome, nomeBuscar) == 0) {
+            printf("\n====Item Encontrado!====\n");
+            printf("Nome: %s\n", itemMochila->itens[i].nome);
+            printf("Tipo: %s\n", itemMochila->itens[i].tipo);
+            printf("Quantidade: %d\n", itemMochila->itens[i].quantidade);
+            printf("Posicao na mochila: %d\n", i + 1);
+            encontrado = 1;
+            break;  // Para a busca após encontrar
+        }
+    }
+    
+    // Se saiu do loop sem encontrar
+    if (encontrado == 0) {
+        printf("\nItem \"%s\" nao foi encontrado na mochila.\n", nomeBuscar);
     }
 }
 
@@ -141,6 +174,7 @@ void menuItem(mochila *itemMochila) {
     int opcao;
     char nome[30];
     char tipo[20];
+    int quantidade;
     do {
         //statusMochila(itemMochila);
 
@@ -148,6 +182,7 @@ void menuItem(mochila *itemMochila) {
         printf("1. Adicionar Item\n");
         printf("2. Remover Item\n");
         printf("3. Listar Itens\n");
+        printf("4. Buscar Item Nome\n");
         printf("0. Voltar\n");
         printf("Escolha uma opcao: ");
         scanf("%d", &opcao);
@@ -157,7 +192,9 @@ void menuItem(mochila *itemMochila) {
                 scanf(" %29[^\n]", nome);
                 printf("Digite o tipo do item a inserir(ex: cura, munição, etc): ");
                 scanf(" %19[^\n]", tipo);
-                adicionarItem(itemMochila, nome, tipo);
+                printf("Digite a quantidade de munições/unidades: ");
+                scanf("%d", &quantidade);
+                adicionarItem(itemMochila, nome, tipo, quantidade);
                 break;
             case 2:
                 printf("Digite o nome do item (loot) a remover: ");
@@ -168,6 +205,9 @@ void menuItem(mochila *itemMochila) {
                 break;
             case 3:
                 listarItens(itemMochila);
+                break;
+            case 4:
+            buscarItemNome(itemMochila);
                 break;
             case 0:
                 printf("Voltando ao menu principal...\n");
